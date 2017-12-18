@@ -17,7 +17,7 @@ public class Main {
 }
 
 /**
- * Created by Andrej on 10.12.2017...
+ * Created by Andrej on 10.12.2017.
  */
 class Graphic {
     private static boolean created = false;
