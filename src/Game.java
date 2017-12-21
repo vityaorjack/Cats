@@ -1,8 +1,10 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.io.Serializable;
+import java.io.*;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.imageio.ImageIO;
 
 public class Game implements Runnable{
 
@@ -10,13 +12,13 @@ public class Game implements Runnable{
     public static int               HIGHT               = 700;
     public static String            TITLE               = "Balls";
     public static int               CLEAR_COLOR         = 0xff00ffff;
-    public static int               NUMBER_BUFFERS      = 3;
+    public static int               NUMBER_BUFFERS      = 4;
     public static final float       UPDATE_RATE         = 60.0f;
     public static final float       UPDATE_INTERVAL     = Time.SECOND/UPDATE_RATE;
     public static final long        IDLE_TIME           = 1;
     public static final String      ATLAS_FILE_NAME     = "textur_atlas.png";
-    private static final Ball       START_BALL          = new Ball(0, 400, 50, 3, 0);
-    private static final int        MIN_BALL_D          = 5;
+    private static final Ball       START_BALL          = new Ball(0, 400, 60, 3, 0);
+    private static final int        MIN_BALL_D          = 15;
 
     private boolean running;
     private Thread gameThread;
@@ -26,7 +28,7 @@ public class Game implements Runnable{
     private static Player player;
     private Arrow arrow;
     private int fps = 0;
-
+    Image image;
     private volatile boolean render;
     //private Level level;
 
@@ -39,12 +41,17 @@ public class Game implements Runnable{
         graphics = Graphic.getGraphics();
         Graphic.addInputListener(getKeyListener());
         //atlas = new TextureAtlas(ATLAS_FILE_NAME);
-        player = new Player();
-        entitys.add(player);
         entitys.add(new Interfase(this));
         arrow = new Arrow();
         entitys.add(arrow);
+        player = new Player();
+        entitys.add(player);    
         //level = new Level(atlas);
+        balls.add(START_BALL);
+        
+        try {
+			image = ImageIO.read(new File("Car.jpg"));
+		} catch (IOException e) {e.printStackTrace();	}
     }
 
     public synchronized void start(){
@@ -176,6 +183,7 @@ public class Game implements Runnable{
     private void removeBall(Ball ball){
         balls.remove(ball);
         entitys.remove(ball);
+        if(balls.size()==0) newBall(700, 300, 100, -3, 0);
     }
 
     public KeyListener getKeyListener(){
@@ -183,7 +191,7 @@ public class Game implements Runnable{
             public void keyPressed(KeyEvent arg0) {
 // System.out.println("P="+arg0.getKeyCode());
                 switch(arg0.getKeyCode()){
-                    case 82:{newBall(10, 10, 100, 3, 0); break;}
+                    case 82:{newBall(700, 300, 100, -3, 0); break;}
                     case 37:{player.setLeft(); break;}
                     case 39:{player.setRight(); break;}
                     case 32:{arrow.fire(player.getX()); break;}
@@ -468,12 +476,16 @@ abstract class Entity {
     public abstract void render(Graphics2D g);
 }
  class Interfase extends Entity{
-
+	 
     Game game;
+    Image image;
 
     public Interfase(Game game){
         super(0, 0);
         this.game = game;
+        
+        try {	image = ImageIO.read(new File("Car.jpg"));
+		} catch (IOException e) {e.printStackTrace();	}
     }
 
     @Override
@@ -483,9 +495,11 @@ abstract class Entity {
 
     @Override
     public void render(Graphics2D g) {
+    	g.drawImage(image, 0, 0,null);
         g.setColor(new Color(200, 0, 0));
         double size = 20;
         g.setFont(new Font("Serif", Font.BOLD | Font.LAYOUT_RIGHT_TO_LEFT, 24));
         g.drawString(game.getCountBall() + " ", 10, 20);
+        
     }
 }
