@@ -16,9 +16,8 @@ public class Game implements Runnable{
     public static final float       UPDATE_RATE         = 60.0f;
     public static final float       UPDATE_INTERVAL     = Time.SECOND/UPDATE_RATE;
     public static final long        IDLE_TIME           = 1;
-    public static final String      ATLAS_FILE_NAME     = "textur_atlas.png";
-    private static final Ball       START_BALL          = new Ball(0, 400, 60, 3, 0);
-    private static final int        MIN_BALL_D          = 15;
+    public static final String      ATLAS_FILE_NAME     = "textur_atlas.png";   
+    private static final int        MIN_BALL_D          = 10;
 
     private boolean running;
     private Thread gameThread;
@@ -30,7 +29,7 @@ public class Game implements Runnable{
     private int fps = 0;
     Image image;
     private volatile boolean render;
-    //private Level level;
+    int level;
 
     private List <Ball> balls = new CopyOnWriteArrayList<Ball>();
     private List<Entity> entitys = new CopyOnWriteArrayList<>();
@@ -47,7 +46,7 @@ public class Game implements Runnable{
         player = new Player();
         entitys.add(player);    
         //level = new Level(atlas);
-        balls.add(START_BALL);
+        newBall(0,400,40,3,0);//start_ball
         
         try {
 			image = ImageIO.read(new File("Car.jpg"));
@@ -127,9 +126,9 @@ public class Game implements Runnable{
         if(ball.isTurn()) {
             if (isCollisionBall(ball, "arow")) {
                 respawn(ball);
-                removeBall(ball);
+                removeBall(ball,true);
             } else if (isCollisionBall(ball, ""))
-                removeBall(ball);
+                removeBall(ball,false);
         } else ball.doTurn();
     }
 
@@ -180,18 +179,25 @@ public class Game implements Runnable{
         return ball;
     }
 
-    private void removeBall(Ball ball){
-        balls.remove(ball);
-        entitys.remove(ball);
-        if(balls.size()==0) newBall(700, 300, 100, -3, 0);
+    private void removeBall(Ball ball, boolean balles){
+       if(balles) { 
+    	   balls.remove(ball);    
+    	   entitys.remove(ball);
+    	   if(balls.size()==0) {
+    		   level++;
+    		   newBall(0, 400, level*40, 3, 0);  }
+       } else { 
+    	   //balls.removeAll(ball);
+    	   
+       }
     }
 
     public KeyListener getKeyListener(){
         return new KeyListener() {
             public void keyPressed(KeyEvent arg0) {
-// System.out.println("P="+arg0.getKeyCode());
+            	// System.out.println("P="+arg0.getKeyCode());
                 switch(arg0.getKeyCode()){
-                    case 82:{newBall(700, 300, 100, -3, 0); break;}
+                    //case 82:{newBall(0,400,40,3,0); break;}
                     case 37:{player.setLeft(); break;}
                     case 39:{player.setRight(); break;}
                     case 32:{arrow.fire(player.getX()); break;}
@@ -495,7 +501,7 @@ abstract class Entity {
 
     @Override
     public void render(Graphics2D g) {
-    	g.drawImage(image, 0, 0,null);
+    	//g.drawImage(image, 0, 0,null);
         g.setColor(new Color(200, 0, 0));
         double size = 20;
         g.setFont(new Font("Serif", Font.BOLD | Font.LAYOUT_RIGHT_TO_LEFT, 24));
