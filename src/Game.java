@@ -17,7 +17,7 @@ public class Game implements Runnable{
     public static final float       UPDATE_INTERVAL     = Time.SECOND/UPDATE_RATE;
     public static final long        IDLE_TIME           = 1;
     public static final String      ATLAS_FILE_NAME     = "textur_atlas.png";   
-    private static final int        MIN_BALL_D          = 10;
+    private static final float      MIN_BALL_Level      = 0.25f;
 
     private boolean running;
     private Thread gameThread;
@@ -29,7 +29,7 @@ public class Game implements Runnable{
     private int fps = 0;
     Image image;
     private volatile boolean render;
-    int level;
+    float level=5;   
 
     private List <Ball> balls = new CopyOnWriteArrayList<Ball>();
     private List<Entity> entitys = new CopyOnWriteArrayList<>();
@@ -46,7 +46,7 @@ public class Game implements Runnable{
         player = new Player();
         entitys.add(player);    
         //level = new Level(atlas);
-        newBall(0,400,40,3,0);//start_ball
+        newBall(0,(int)(400-level*40),level,3,0);//start_ball
         
         try {
 			image = ImageIO.read(new File("Car.jpg"));
@@ -165,17 +165,18 @@ public class Game implements Runnable{
     }
 
     private void respawn(Ball ball) {
-        int BallD = ball.getD()/2;
-        if(BallD >= MIN_BALL_D) {
-            newBall(ball.getX(), ball.getY(), BallD, 3, ball.getSpeed());
-            newBall(ball.getX(), ball.getY(), BallD, -3, ball.getSpeed());
+    	float ballLevel=ball.level/2;    	
+        if(ballLevel > MIN_BALL_Level) {
+            newBall(ball.getX(), ball.getY(),ballLevel, 3, ball.getSpeed());
+            newBall(ball.getX(), ball.getY(),ballLevel, -3, ball.getSpeed());
         }
     }
 
-    private Ball newBall(int x, int y, int d, int direction, int speed){
-        Ball ball = new Ball(x, y, d, direction, speed);
+    private Ball newBall(int x, int y, float level, int direction, int speed){
+    	Ball ball = new Ball(x, y, level, direction, speed);
         balls.add(ball);
         entitys.add(ball);
+        System.out.println("P="+ball.y+" "+ball.d);
         return ball;
     }
 
@@ -185,7 +186,7 @@ public class Game implements Runnable{
     	   entitys.remove(ball);
     	   if(balls.size()==0) {
     		   level++;
-    		   newBall(0, 400, level*40, 3, 0);  }
+    		   newBall(0, (int)(400-level*40), level, 3, 0);  }
        } else { 
     	   //balls.removeAll(ball);
     	   
@@ -208,7 +209,7 @@ public class Game implements Runnable{
                     case 39:{player.setNon(); break;}
                 }}
             public void keyTyped(KeyEvent arg0) {
-//System.out.println("T="+arg0.getKeyChar());
+            	//System.out.println("T="+arg0.getKeyChar());
             }
         };
     }
@@ -219,26 +220,28 @@ public class Game implements Runnable{
 }
 class Ball extends Entity implements Serializable{
 
-    private static final int        ACCELERATION            = 1;
+    
+	private static final int        ACCELERATION            = 1;
     private static final int        END_WINDOW_Y            = Game.HIGHT;
     private static final int        END_WINDOW_X            = Game.WEIDTH;
     private static final int        START_WINDOW_X          = 0;
-
-    private int d;
+    private final int constD=40;
+    int d;
     private int speed;
     private int direction = 3;
     private int oldX;
     private boolean turn = false;
-
+    public float level;
     public void aplay(){
         setSpeed(speed + ACCELERATION);
         setY(y + speed);
         setX(x + direction);
     }
 
-    public Ball(int x, int y, int d, int direction, int speed) {
+    public Ball(int x, int y, float level, int direction, int speed) {
         super(x,y);
-        this.d = d;
+        this.level=level;
+        this.d = (int)(level*constD);
         this.direction = direction;
         this.speed = speed;
         oldX = x;
